@@ -3,7 +3,7 @@ Name: Yida Tong
 
 ID: 3807206777
 
-Finished: phase 1, 2, 3 and 4
+Finished: phase **1, 2, 3 and 4**
 
 
 # **Abstract:**
@@ -89,6 +89,3 @@ struct response {
 };
 ```
 Assuming your length of name doesn't exceed 255 bytes!
-
-# Project summary: 
-Finish phase 1, 2, 3 and 4
