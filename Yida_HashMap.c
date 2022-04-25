@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 // hash func copy from source: https://en.wikipedia.org/wiki/Jenkins_hash_function
