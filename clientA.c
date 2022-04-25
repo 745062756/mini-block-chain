@@ -5,15 +5,17 @@
 static void connectionSetup();
 static void balanceHandler(const char*);
 static void transHandler(const char* , const char* , int );
+static void listHandler();
+static void statHandler(const char*);
 
 int main(int argc, char* argv[]) {
    printf("The client A is up and running.\n");
    connectionSetup();
    if (argc==2) {
-      balanceHandler(argv[1]);
-   } else if (argc==4) {
-      transHandler(argv[1], argv[2], atoi(argv[3]));
-   }
+      if (strcmp(argv[1], "TXLIST")==0) listHandler();
+      else balanceHandler(argv[1]);
+   } else if (argc==3) statHandler(argv[1]);
+   else if (argc==4) transHandler(argv[1], argv[2], atoi(argv[3]));
    close(fd);
    return 0;
 }
@@ -74,5 +76,34 @@ void transHandler(const char* senderName, const char* receiverName, int amount) 
       else if (reply.errorCode==bothNotMember) printf("Unable to proceed with the transaction as %s and %s are not part of the network.\n", reply.senderName, reply.receiverName);
    } else {
       printf("%s successfully transferred %d alicoins to %s.\nThe current balance of %s is : %d alicoins.\n", reply.senderName, reply.amount, reply.receiverName, reply.senderName, reply.balance);
+   }
+}
+
+static
+void listHandler() {
+   struct clientMSG clientMSG;
+   clientMSG.clientID = 'A';
+   clientMSG.requestCode = TxLIST;
+   send(fd, &clientMSG, sizeof clientMSG, 0);
+   printf("ClientA sent a sorted list request to the main server.\n");
+}
+
+static
+void statHandler(const char* usrName) {
+   struct clientMSG clientMSG;
+   clientMSG.clientID = 'A';
+   clientMSG.requestCode = Rank;
+   strcpy(clientMSG.senderName, usrName);
+   send(fd, &clientMSG, sizeof clientMSG, 0);
+   printf("%s sent a statistics enquiry request to the main server.\n", usrName);
+
+   // print result
+   printf("%s statistics are the following:\n", usrName);
+   stringMSG buf;
+
+   while(1) {
+      recv(fd, &buf, sizeof buf, 0);
+      if (buf.theEnd==True) break;
+      printf("%s\n", buf.msg);
    }
 }

@@ -11,9 +11,16 @@ static void setupParentSocket(int*, int*);
 static void setupUDPSocket(int *);
 static void clientHandler(const int*);
 static void talkBackend(int, const int*, const struct request*, struct response*);
+void updateCurMax(const int*);
+void cache(const int*);
+int compare(const void *, const void*);
+int compareOne(const void *, const void*);
 
 int curTCP;
-int curMax;
+int curMax = 0;
+struct obj* basePTR;
+int allocated = False;
+int arrLen = 0;
 
 int main() {
    srand(time(0));
@@ -214,13 +221,7 @@ void clientHandler(const int* myFd) {
             reply.balance = curBalance;
          } else {
             // push transaction
-            struct request queryMax;
-            queryMax.requestCode = FetchCurMax;
-            struct response curMaxRes;
-            for (int i=1; i<4;i++) {
-               talkBackend(i, myFd, &queryMax, &curMaxRes);
-               curMax = MAX(curMax, curMaxRes.curMax);
-            }
+            updateCurMax(myFd);
 
             struct request pushRequest;
             pushRequest.requestCode = PushRecord;
@@ -238,7 +239,148 @@ void clientHandler(const int* myFd) {
          }
       }
    }
+
+   if (clientMSG.requestCode==TxLIST) {
+      cache(myFd);
+      qsort(basePTR, arrLen, sizeof (struct obj), compare);
+      FILE* filePTR;
+      if ((filePTR = fopen("alichain.txt", "w"))==NULL) {
+         perror("TxLIST");
+         exit(1);
+      }
+      for (int i=0; i<arrLen;i++) fprintf(filePTR, "%d %s %s %d\n", basePTR[i].sequence, basePTR[i].sender, basePTR[i].receiver, basePTR[i].amount);
+      fclose(filePTR);
+   }
+
+   if (clientMSG.requestCode==Rank) {
+      cache(myFd);
+
+      // data block list
+      dataBlock datalist;
+      int datalistSize=0;
+      datalist.next = NULL;
+      dataBlock* track = &datalist;
+
+      element * hashMap;
+      unsigned int bucketSize = 1024;
+      init(&hashMap, bucketSize);
+      for (int i=0; i<arrLen;i++) {
+         void* myDataPTR;
+         if (strcmp(basePTR[i].sender, clientMSG.senderName)==0) {
+            // usr is sender
+            if ((myDataPTR = lookup(basePTR[i].receiver, bucketSize, hashMap))==NULL) {
+               dataBlock* record = malloc(sizeof (dataBlock));
+               add(basePTR[i].receiver, record, bucketSize, hashMap);
+               track->next = record;
+               track = track->next;
+               myDataPTR = record;
+               datalistSize++;
+
+               record->amount = 0;
+               strcpy(record->usrName, basePTR[i].receiver);
+               record->transFreq=0;
+               record->next = NULL;
+            }
+            ((dataBlock*) myDataPTR)->transFreq++;
+            ((dataBlock*) myDataPTR)->amount-=basePTR[i].amount;
+         }
+
+         if (strcmp(basePTR[i].receiver, clientMSG.senderName)==0) {
+            // usr is receiver
+            if ((myDataPTR = lookup(basePTR[i].sender, bucketSize, hashMap))==NULL) {
+               dataBlock* recordOne = malloc(sizeof (dataBlock));
+               add(basePTR[i].sender, recordOne, bucketSize, hashMap);
+               track->next = recordOne;
+               track = track->next;
+               myDataPTR = recordOne;
+               datalistSize++;
+
+               recordOne->amount = 0;
+               strcpy(recordOne->usrName, basePTR[i].sender);
+               recordOne->transFreq=0;
+               recordOne->next = NULL;
+            }
+            ((dataBlock*) myDataPTR)->transFreq++;
+            ((dataBlock*) myDataPTR)->amount+=basePTR[i].amount;
+         }
+      }
+      destructor(hashMap, bucketSize);
+
+      stringMSG stringMSG;
+      if (datalistSize!=0) {
+         dataBlock** dataBlockSortPTR = malloc(sizeof(dataBlock *) * datalistSize);
+         track = datalist.next;
+         int index = 0;
+         while (track != NULL) {
+            dataBlockSortPTR[index++] = track;
+            track = track->next;
+         }
+         qsort(dataBlockSortPTR, datalistSize, sizeof(void *), compareOne);
+         // send back data to client line one at a time
+         for (int i = 0; i < datalistSize; i++) {
+            stringMSG.theEnd = False;
+            sprintf(stringMSG.msg, "%d--%s--%d--(%d)", i + 1, dataBlockSortPTR[i]->usrName, dataBlockSortPTR[i]->transFreq, dataBlockSortPTR[i]->amount);
+            send(fdChild, &stringMSG, sizeof stringMSG, 0);
+            free(dataBlockSortPTR[i]);
+         }
+         free(dataBlockSortPTR);
+      }
+      stringMSG.theEnd = True;
+      send(fdChild, &stringMSG, sizeof stringMSG, 0);
+   }
    send(fdChild, &reply, sizeof reply, 0);
    if (clientMSG.requestCode==CheckWallet) printf("The main server sent the current balance to client %c.\n", clientMSG.clientID);
    if (clientMSG.requestCode==TresCOIN) printf("The main server sent the result of the transaction to client %c.\n", clientMSG.clientID);
+}
+
+void cache(const int* myFd) {
+   updateCurMax(myFd);
+
+   if (allocated) free(basePTR);
+   basePTR = malloc(sizeof (struct obj)*curMax);
+   allocated=True;
+   arrLen = curMax;
+
+   struct obj* curPTR = basePTR;
+
+   struct request request;
+   request.requestCode = FetchList;
+   struct response response;
+
+
+   for (int i=1; i<4;i++) {
+      struct sockaddr_in backendAddress;
+      socklen_t backendAddressSize = sizeof backendAddress;
+
+      talkBackend(i, myFd, &request, &response);
+
+      if (response.statusCode==Success) {
+         while(1) {
+            memcpy(curPTR, &response.objItem, sizeof (struct obj));
+            curPTR++;
+            if (response.atEnd==True) {
+               break;
+            }
+            recvfrom(*myFd, &response, sizeof response, 0, (struct sockaddr *)&backendAddress, &backendAddressSize);
+         }
+      }
+   }
+}
+
+void updateCurMax(const int*myFd) {
+   struct request queryMax;
+   queryMax.requestCode = FetchCurMax;
+   struct response curMaxRes;
+   for (int i=1; i<4;i++) {
+      talkBackend(i, myFd, &queryMax, &curMaxRes);
+      curMax = MAX(curMax, curMaxRes.curMax);
+   }
+}
+
+int compare(const void *a, const void*b) {
+   return ((struct obj*)a)->sequence - ((struct obj*)b)->sequence;
+}
+
+int compareOne(const void *a, const void*b) {
+   return (*(dataBlock**)b)->transFreq - (*(dataBlock**)a)->transFreq;
 }

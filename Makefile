@@ -1,9 +1,15 @@
 CFLAG = -g -Wall -o
 
-all: serverM serverA serverB serverC
+all: serverM serverA serverB serverC clientA clientB
 
-serverM: serverM.c serverM.h
-	gcc $(CFLAG) serverM serverM.c
+serverM: serverM.o Yida_HashMap.o
+	gcc $(CFLAG) serverM serverM.o Yida_HashMap.o
+
+Yida_HashMap.o: Yida_HashMap.c Yida_HashMap.h
+	gcc -g -Wall -c Yida_HashMap.c
+
+serverM.o: serverM.c serverM.h
+	gcc -g -Wall -c serverM.c
 
 serverA: serverA.c serverM.h
 	gcc $(CFLAG) serverA serverA.c
@@ -23,9 +29,9 @@ clientB: clientB.c clientA.h
 clean:
 	rm -f *.o serverM serverA serverB serverC clientA clientB
 	rm -r *.dSYM
-
-Zombie:
-	ps aux | grep $PWD
-
-kill:
-	kill -s CHLD
+#
+#Zombie:
+#	ps aux | grep $PWD
+#
+#kill:
+#	kill -s CHLD

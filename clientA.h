@@ -12,6 +12,9 @@
 
 #define localhost "127.0.0.1"
 
+#define True 1
+#define False 0
+
 int fd;
 
 struct clientMSG {
@@ -34,6 +37,9 @@ struct serverMMSG {
 //request code
 #define CheckWallet 1
 #define TresCOIN 2
+#define TxLIST 3
+#define Rank 4
+
 // status code
 #define ERR (-1)
 #define Success 0
@@ -43,6 +49,10 @@ struct serverMMSG {
 #define bothNotMember 4
 #define insufficientFund 5
 
+typedef struct stringMSG {
+    int theEnd;
+    char msg[1024];
+} stringMSG;
 
 #ifdef CLIENT_A
 #define TargetPort 25777

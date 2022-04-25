@@ -27,7 +27,6 @@ int main() {
 
    while(1) {
       recvfrom(fd, &request, sizeof request, 0, (struct sockaddr*) &serverMAddress, &serverMAddressSize);
-      response.operation = request.requestCode;
       if (request.requestCode==FindPerson) {
          response.statusCode = FindPersonHandler(request.sender);
       }
@@ -43,9 +42,25 @@ int main() {
       } else if (request.requestCode==FetchCurMax) {
          response.statusCode = Success;
          response.curMax = curMax;
+      } else if (request.requestCode==FetchList) {
+         printf("The ServerC received a request from the Main Server.\n");
+         response.statusCode = ERR;
+         for(struct obj* curPTR = anchor.next; curPTR->head!=1; curPTR=curPTR->next) {
+            response.statusCode = Success;
+            response.objItem.sequence = curPTR->sequence;
+            strcpy(response.objItem.sender, curPTR->sender);
+            strcpy(response.objItem.receiver, curPTR->receiver);
+            response.objItem.amount = curPTR->amount;
+            if (curPTR->next->head==1) {
+               response.atEnd = True;
+               break;
+            }
+            response.atEnd = False;
+            sendto(fd, &response, sizeof response, 0, (struct sockaddr*) &serverMAddress, serverMAddressSize);
+         }
       }
       sendto(fd, &response, sizeof response, 0, (struct sockaddr*) &serverMAddress, serverMAddressSize);
-      if (request.requestCode==FetchRecord || request.requestCode==PushRecord) printf("The ServerC finished sending the response to the Main Server.\n");
+      if (request.requestCode==FetchRecord || request.requestCode==PushRecord || request.requestCode==FetchList) printf("The ServerC finished sending the response to the Main Server.\n");
    }
 }
 
