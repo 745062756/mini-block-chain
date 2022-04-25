@@ -25,13 +25,3 @@ clientA: clientA.c clientA.h
 
 clientB: clientB.c clientA.h
 	gcc $(CFLAG) clientB clientB.c
-
-clean:
-	rm -f *.o serverM serverA serverB serverC clientA clientB
-	rm -r *.dSYM
-#
-#Zombie:
-#	ps aux | grep $PWD
-#
-#kill:
-#	kill -s CHLD
