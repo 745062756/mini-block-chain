@@ -89,3 +89,10 @@ struct response {
 };
 ```
 Assuming your length of name doesn't exceed 255 bytes!
+
+# More to comment:
+1. Before running balance check, I implemented peek a name function on server a, b, c (All message are hidden related to this). 
+It will only send request to the backend server that contains the name for purpose of balance calc
+(This is why only those backend server name that contains the user are printed on console) 
+
+2. After transaction, it will automatically query balance of sender again. (This is reason some balance check related message are printed)
