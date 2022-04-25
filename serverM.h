@@ -1,3 +1,7 @@
+/*
+ * Group header file for backend servers and main server together for ease of maintenance. Topper part are shared by all.
+ * Below part are split to different server source code
+ * */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,6 +25,7 @@
 #define True 1
 #define False 0
 
+// data structure for cache block text file
 struct obj {
     int sequence;
     char sender[256];
@@ -31,6 +36,7 @@ struct obj {
     int head;
 };
 
+// data structure that main server send to backend servers
 struct request {
     int requestCode;
     char sender[256];
@@ -39,6 +45,7 @@ struct request {
     int nextSeq;
 };
 
+// data structure that backend server replies to central server
 struct response {
     int statusCode;
     int netGain;
@@ -58,11 +65,14 @@ struct response {
 #define ERR (-1)
 #define Success 0
 
+// header file only belongs to main server
 #ifdef SERVER_M
 #include "Yida_HashMap.h"
 #define PORT_NUM 24777
 #define PORT_TCP_A 25777
 #define PORT_TCP_B 26777
+
+// data structure that client sends to main server
 struct clientMSG {
     char clientID;
     int requestCode;
@@ -71,6 +81,7 @@ struct clientMSG {
     int amount;
 };
 
+// data structure that main server replies to client
 struct serverMMSG {
     int statusCode;
     int errorCode;
@@ -94,6 +105,7 @@ struct serverMMSG {
 #define backendB 2
 #define backendC 3
 
+// data structure for phase 4: record stats
 typedef struct dataBlock {
     char usrName[256];
     int transFreq;
@@ -101,23 +113,26 @@ typedef struct dataBlock {
     struct dataBlock* next;
 } dataBlock;
 
+// data structure for phase 4: send string message to client one at a time, then client print at console
 typedef struct stringMSG {
     int theEnd;
     char msg[1024];
 } stringMSG;
 #endif
 
+// header file only belongs to backend server A
 #ifdef SERVER_A
 #define PORT_NUM 21777
 int fd;
 #endif
 
-
+// header file only belongs to backend server B
 #ifdef SERVER_B
 #define PORT_NUM 22777
 int fd;
 #endif
 
+// header file only belongs to backend server C
 #ifdef SERVER_C
 #define PORT_NUM 23777
 int fd;

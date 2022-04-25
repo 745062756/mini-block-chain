@@ -54,10 +54,12 @@ typedef struct stringMSG {
     char msg[1024];
 } stringMSG;
 
+// header file only belongs to client A
 #ifdef CLIENT_A
 #define TargetPort 25777
 #endif
 
+// header file only belongs to client B
 #ifdef CLIENT_B
 #define TargetPort 26777
 #endif

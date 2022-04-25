@@ -80,6 +80,9 @@ void setupSocket() {
    }
 }
 
+/*
+ * check if a given name exists (either sender or receiver)
+ * */
 static
 int FindPersonHandler(const char* name) {
    for(struct obj* curPTR = anchor.next; curPTR->head!=1; curPTR=curPTR->next) {
@@ -88,6 +91,9 @@ int FindPersonHandler(const char* name) {
    return ERR;
 }
 
+/*
+ * calculate balance
+ * */
 static
 int FetchRecordHandler(const char* name) {
    int net = 0;
@@ -98,6 +104,9 @@ int FetchRecordHandler(const char* name) {
    return net;
 }
 
+/*
+ * insert transaction record to backing store
+ * */
 static
 void PushRecordHandler(const char* sender, const char* receiver, int amount, int seq) {
    fprintf(filePTR, "%d %s %s %d\n", seq, sender, receiver, amount);
@@ -115,6 +124,9 @@ void PushRecordHandler(const char* sender, const char* receiver, int amount, int
    curMax = seq;
 }
 
+/*
+ * process text files.
+ * */
 static
 void cacheFile() {
    anchor.head=1;

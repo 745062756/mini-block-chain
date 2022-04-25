@@ -96,6 +96,9 @@ static void setupUDPSocket(int* myFd) {
    }
 }
 
+/*
+ * for talking with backend server
+ * */
 static
 void talkBackend(int backend, const int* myFd, const struct request* request, struct response* response) {
    char whichServer;
@@ -122,6 +125,9 @@ void talkBackend(int backend, const int* myFd, const struct request* request, st
    if (request->requestCode==PushRecord) printf("The main server received the feedback from server %c using UDP over port %d.\n", whichServer,  PORT_NUM);
 }
 
+/*
+ * check if the given name inside that backend server
+ * */
 static
 int peekMember(const int* myFd, const char* name, int server) {
    struct request request;
@@ -333,6 +339,9 @@ void clientHandler(const int* myFd) {
    if (clientMSG.requestCode==TresCOIN) printf("The main server sent the result of the transaction to client %c.\n", clientMSG.clientID);
 }
 
+/*
+ * read all transaction record from server a, b, c and cache inside main server.
+ * */
 void cache(const int* myFd) {
    updateCurMax(myFd);
 
@@ -367,6 +376,9 @@ void cache(const int* myFd) {
    }
 }
 
+/*
+ * get most updated sequence number from server a, b, c
+ * */
 void updateCurMax(const int*myFd) {
    struct request queryMax;
    queryMax.requestCode = FetchCurMax;
@@ -377,10 +389,16 @@ void updateCurMax(const int*myFd) {
    }
 }
 
+/*
+ * Comparison func for sort sequence number
+ * */
 int compare(const void *a, const void*b) {
    return ((struct obj*)a)->sequence - ((struct obj*)b)->sequence;
 }
 
+/*
+ * Comparison func for sort frequency number
+ * */
 int compareOne(const void *a, const void*b) {
    return (*(dataBlock**)b)->transFreq - (*(dataBlock**)a)->transFreq;
 }

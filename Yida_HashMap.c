@@ -1,3 +1,4 @@
+// self developed hash table except the string hash to number algo copied from internet. See source below
 #include "Yida_HashMap.h"
 
 #include <stdlib.h>
@@ -21,6 +22,9 @@ uint32_t jenkins_one_at_a_time_hash(const uint8_t* key, size_t length) {
    return hash;
 }
 
+/*
+ * Initialize a hash map
+ * */
 void init(element** bucketArrPTR, unsigned int size) {
    *bucketArrPTR = malloc(sizeof (element)*size);
    for (unsigned int i = 0; i<size; i++) {
@@ -30,6 +34,9 @@ void init(element** bucketArrPTR, unsigned int size) {
    }
 }
 
+/*
+ * deallocated hash map
+ * */
 void destructor(element* bucketArrPTR, unsigned int size) {
    for (unsigned int i = 0; i<size; i++) {
       element* cur = bucketArrPTR[i].next;
@@ -43,6 +50,9 @@ void destructor(element* bucketArrPTR, unsigned int size) {
    free(bucketArrPTR);
 }
 
+/*
+ * lookup a key and return value
+ * */
 void* lookup(const char* key, unsigned int size, element* bucketArrPTR) {
    element* cur;
    cur = &bucketArrPTR[(unsigned int) jenkins_one_at_a_time_hash((const uint8_t*) key, strlen(key)) % size];
@@ -52,6 +62,9 @@ void* lookup(const char* key, unsigned int size, element* bucketArrPTR) {
    return NULL;
 }
 
+/*
+ * add a key and value pair
+ * */
 int add(const char* key, void* dataPTR, unsigned int size, element* bucketArrPTR) {
    element* cur;
    cur = &bucketArrPTR[(unsigned int) jenkins_one_at_a_time_hash((const uint8_t*) key, strlen(key)) % size];
