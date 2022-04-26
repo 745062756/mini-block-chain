@@ -53,7 +53,7 @@ void balanceHandler(const char* userName) {
    if (reply.statusCode == ERR) {
       printf("Unable to proceed with the request as %s is not part of the network.\n", reply.senderName);
    } else {
-      printf("The current balance of %s is %d alicoins.\n", reply.senderName, reply.balance);
+      printf("The current balance of %s is %d coins.\n", reply.senderName, reply.balance);
    }
 }
 
@@ -73,12 +73,12 @@ void transHandler(const char* senderName, const char* receiverName, int amount) 
    recv(fd, &reply, sizeof reply, 0);
 
    if (reply.statusCode == ERR) {
-      if (reply.errorCode==insufficientFund) printf("%s was unable to transfer %d alicoins to %s because of insufficient balance.\nThe current balance of %s is : %d alicoins.\n", reply.senderName, reply.amount, reply.receiverName, reply.senderName, reply.balance);
+      if (reply.errorCode==insufficientFund) printf("%s was unable to transfer %d coins to %s because of insufficient balance.\nThe current balance of %s is : %d coins.\n", reply.senderName, reply.amount, reply.receiverName, reply.senderName, reply.balance);
       else if (reply.errorCode==senderNotMember) printf("Unable to proceed with the transaction as %s is not part of the network.\n", reply.senderName);
       else if (reply.errorCode==receiverNotMember) printf("Unable to proceed with the transaction as %s is not part of the network.\n", reply.receiverName);
       else if (reply.errorCode==bothNotMember) printf("Unable to proceed with the transaction as %s and %s are not part of the network.\n", reply.senderName, reply.receiverName);
    } else {
-      printf("%s successfully transferred %d alicoins to %s.\nThe current balance of %s is : %d alicoins.\n", reply.senderName, reply.amount, reply.receiverName, reply.senderName, reply.balance);
+      printf("%s successfully transferred %d coins to %s.\nThe current balance of %s is : %d coins.\n", reply.senderName, reply.amount, reply.receiverName, reply.senderName, reply.balance);
    }
 }
 

@@ -250,7 +250,7 @@ void clientHandler(const int* myFd) {
       cache(myFd);
       qsort(basePTR, arrLen, sizeof (struct obj), compare);
       FILE* filePTR;
-      if ((filePTR = fopen("alichain.txt", "w"))==NULL) {
+      if ((filePTR = fopen("chainSummary.txt", "w"))==NULL) {
          perror("TxLIST");
          exit(1);
       }
